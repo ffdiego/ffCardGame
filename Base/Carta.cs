@@ -12,7 +12,7 @@ public enum Naipe
     Paus
 }
 
-namespace CardGame
+namespace CardGame.Base
 {
     public class Carta
     {

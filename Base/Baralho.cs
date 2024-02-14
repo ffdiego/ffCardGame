@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CardGame
+namespace CardGame.Base
 {
     public class Baralho
     {
         public List<Carta> Cartas;
         public List<Carta> CartasRemovidas;
-        public Baralho(bool comCoringa = false) 
+        public Baralho(bool comCoringa = false)
         {
             int quantidadeNaipes = Enum.GetValues<Naipe>().Length;
             int quantidadeNumeros = 13;
@@ -18,10 +18,10 @@ namespace CardGame
 
             Cartas = new List<Carta>(quantidadeNaipes * quantidadeNumeros + quantidadeCoringas);
             CartasRemovidas = new List<Carta>(quantidadeNaipes * quantidadeNumeros + quantidadeCoringas);
-            
-            foreach (var naipe in Enum.GetValues<Naipe>()) 
-            { 
-                for(int i = 1; i <= quantidadeNumeros; i++)
+
+            foreach (var naipe in Enum.GetValues<Naipe>())
+            {
+                for (int i = 1; i <= quantidadeNumeros; i++)
                 {
                     Cartas.Add(new Carta(naipe, i));
                 }
@@ -30,22 +30,20 @@ namespace CardGame
             Embaralhar();
         }
 
-        public List<Carta> PuxarCartas(int nCartas)
+        public List<Carta> PuxarCartas(int nCartas, bool remove = true)
         {
             List<Carta> cartasPuxadas = Cartas.TakeLast(nCartas).ToList();
 
-            Cartas.RemoveRange(Cartas.Count - cartasPuxadas.Count, cartasPuxadas.Count);
-            CartasRemovidas.AddRange(cartasPuxadas);
+            if (remove)
+            {
+                Cartas.RemoveRange(Cartas.Count - cartasPuxadas.Count, cartasPuxadas.Count);
+                CartasRemovidas.AddRange(cartasPuxadas);
+            }
 
             return cartasPuxadas;
         }
 
-        public List<Carta> OlharCartasDoTopo(int nCartas)
-        {
-            List<Carta> cartasPuxadas = Cartas.TakeLast(nCartas).ToList();
-
-            return cartasPuxadas;
-        }
+        public List<Carta> OlharCartasDoTopo(int nCartas) => PuxarCartas(nCartas, false);
 
         public void Embaralhar()
         {
