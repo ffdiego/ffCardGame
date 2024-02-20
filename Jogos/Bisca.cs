@@ -1,9 +1,4 @@
 ﻿using CardGame.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CardGame.Jogos
 {
@@ -17,7 +12,7 @@ namespace CardGame.Jogos
         public Baralho Baralho;
         public List<Jogador> Jogadores;
         public bool Iniciou;
-        private Jogador JogadorAtual;
+        private Jogador? JogadorAtual;
 
         public Bisca()
         {
@@ -54,17 +49,34 @@ namespace CardGame.Jogos
             return true;
         }
 
+        public async void RespondeStatus(Jogador jogador)
+        {
+            if (!JogadorEstaNaPartida(jogador))
+            {
+                return;
+            }
+
+            await jogador.EnviaPerguntaAsync("mão: 11, k3, 21", CancellationToken.None);
+        }
+
+        private bool JogadorEstaNaPartida(Jogador jogador) 
+        {
+            if (!Jogadores.Contains(jogador))
+            {
+                throw new Exception($"Jogador {jogador.Nome} não está na partida!");
+            }
+
+            return true;
+        }
+
         public async void ExecutaRodada()
         {
-            await JogadorAtual.EnviaMensagem("suavez");
+            var cancelToken = new CancellationTokenSource(tempoPorRodada);
+
+            Task<string> respostaJogador = JogadorAtual!.EnviaPerguntaAsync("suavez", cancelToken.Token);
+
+            Task terminouPrimeiro = await Task.WhenAny(respostaJogador, Task.Delay(tempoPorRodada));
             
-            Task tempoEsgotado = Task.Delay(tempoPorRodada);
-            Task<string> respostaJogador = JogadorAtual.RecebeResposta();
-
-            var timeoutRodada = new CancellationTokenSource(tempoPorRodada);
-
-            Task terminouPrimeiro = await Task.WhenAny(tempoEsgotado, Task.Delay(tempoPorRodada));
-
             if (terminouPrimeiro == respostaJogador)
             {
                 Console.WriteLine($"Resposta do jogador: {respostaJogador.Result}");
@@ -73,7 +85,6 @@ namespace CardGame.Jogos
             {
                 Console.WriteLine("O jogador demorou muito pra responder!");
             }
-
 
         }
     }

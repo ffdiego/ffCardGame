@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CardGame.Jogos;
 using CardGame.Network;
+using Microsoft.AspNetCore.Connections;
 
 namespace CardGame.Base
 {
@@ -12,12 +8,23 @@ namespace CardGame.Base
     {
         public string Nome;
         public List<Carta> Mao;
+        public Bisca? jogoAtual;
         public ConexaoWebSocket? conexao { get; set; }
 
         public Jogador(string nome)
         {
             Nome = nome;
             Mao = new List<Carta>();
+        }
+
+        public async Task<string> EnviaPerguntaAsync(string pergunta, CancellationToken cToken)
+        {
+            if (conexao == null)
+            {
+                throw new ConnectionAbortedException();
+            }
+
+            return await conexao.EnviaPerguntaAsync(pergunta, cToken);
         }
     }
 }
