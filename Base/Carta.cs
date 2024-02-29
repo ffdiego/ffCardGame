@@ -16,8 +16,14 @@ namespace CardGame.Base
 {
     public class Carta
     {
-        public Naipe Naipe;
-        public int Numero;
+        public Naipe? Naipe { get; }
+        public int? Numero { get; }
+
+        public Carta()
+        {
+            this.Naipe = null;
+            this.Numero = null;
+        }
 
         public Carta(Naipe naipe, int numero)
         {
@@ -26,8 +32,8 @@ namespace CardGame.Base
                 throw new ArgumentException("Número de carta inválido");
             }
 
-            Naipe = naipe;
-            Numero = numero;
+            this.Naipe = naipe;
+            this.Numero = numero;
         }
 
         public static Carta GerarCartaAleatoria()

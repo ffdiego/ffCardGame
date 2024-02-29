@@ -6,24 +6,21 @@ namespace CardGame.Base
 {
     public class Jogador
     {
-        public string Nome;
-        public List<Carta> Mao;
-        public Bisca? jogoAtual;
-        public ConexaoWebSocket? conexao { get; set; }
+        private ConexaoWebSocket conexao;
 
-        public Jogador(string nome)
+        public string Nome;
+
+        public List<Carta> Mao;
+
+        public Jogador(ConexaoWebSocket webSocket, string nome)
         {
-            Nome = nome;
-            Mao = new List<Carta>();
+            this.conexao = webSocket;
+            this.Nome = nome;
+            this.Mao = new List<Carta>();
         }
 
         public async Task<string> EnviaPerguntaAsync(string pergunta, CancellationToken cToken)
         {
-            if (conexao == null)
-            {
-                throw new ConnectionAbortedException();
-            }
-
             return await conexao.EnviaPerguntaAsync(pergunta, cToken);
         }
     }

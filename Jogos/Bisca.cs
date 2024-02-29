@@ -1,38 +1,30 @@
 ﻿using CardGame.Base;
+using System.Text.Json;
 
 namespace CardGame.Jogos
 {
-    public class Bisca
+    public class Bisca: Jogo
     {
         // Definicoes fixas
-        readonly int MaximosJogadores = 6;
         readonly int CartasNaMaoDeCadaJogador = 7;
         readonly TimeSpan tempoPorRodada = TimeSpan.FromSeconds(15);
 
         public Baralho Baralho;
-        public List<Jogador> Jogadores;
+        public List<Carta> Monte;
+
         public bool Iniciou;
         private Jogador? JogadorAtual;
 
         public Bisca()
         {
             Baralho = new Baralho();
-            Jogadores = new List<Jogador>();
+            Monte = new List<Carta>();
+            this.MaximosJogadores = 6;
+
             Iniciou = false;
         }
 
-        public bool AdicionaJogador(Jogador jogador)
-        {
-            if (Jogadores.Count > (MaximosJogadores + 1))
-            {
-                return false;
-            }
-
-            Jogadores.Add(jogador);
-            return true;
-        }
-
-        public bool IniciaJogo()
+        public override bool IniciaJogo()
         {
             if (Jogadores.Count == 0)
             {
@@ -59,15 +51,41 @@ namespace CardGame.Jogos
             await jogador.EnviaPerguntaAsync("mão: 11, k3, 21", CancellationToken.None);
         }
 
-        private bool JogadorEstaNaPartida(Jogador jogador) 
+        public override EstadoTelaDAO ObtemInformacoes(Jogador jogador)
         {
-            if (!Jogadores.Contains(jogador))
+            if (!JogadorEstaNaPartida(jogador))
             {
-                throw new Exception($"Jogador {jogador.Nome} não está na partida!");
+                throw new Exception($"Jogador {jogador.Nome} requisitou tela e não está na partida!");
             }
 
-            return true;
+            Jogador baixo = jogador;
+            Jogador direita = ObtemProximo(jogador);
+            Jogador cima = ObtemProximo(direita);
+            Jogador esquerda = ObtemProximo(cima);
+
+            return new EstadoTelaDAO()
+            {
+                Baixo = baixo,
+                Direita = direita,
+                Cima = cima,
+                Esquerda = esquerda,
+                Monte = this.Monte
+            };
         }
+
+        private bool JogadorEstaNaPartida(Jogador jogador) => Jogadores.Contains(jogador);
+
+        private Jogador ObtemProximo(Jogador jogador) 
+        {
+            int indexJogador = Jogadores.IndexOf(jogador);
+
+            if (indexJogador < Jogadores.Count - 1)
+            {
+                return Jogadores[indexJogador + 1];
+            }
+
+            return Jogadores[0];
+        } 
 
         public async void ExecutaRodada()
         {
