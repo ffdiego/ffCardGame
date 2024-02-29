@@ -1,11 +1,11 @@
-﻿using System.Net.WebSockets;
+﻿using CardGame.Base;
+using System.Net.WebSockets;
 using System.Text;
 
 enum EstadoAtual
 {
-    PerguntaGuid,
-    PerguntaPartida,
-    Conectado
+    Anonimo,
+    Identificado
 }
 
 namespace CardGame.Network
@@ -15,12 +15,15 @@ namespace CardGame.Network
         private HttpContext context;
         private WebSocket? webSocket;
         private EstadoAtual estado;
+
         public Guid Guid;
-        public int Partida;
+        public string Nome;
+        public Jogador? Jogador;
+
         public ConexaoWebSocket(HttpContext context)
         {
             this.context = context;
-            this.estado = EstadoAtual.PerguntaGuid;
+            this.estado = EstadoAtual.Anonimo;
         }
 
         public async Task EscutaAsync()
@@ -29,28 +32,59 @@ namespace CardGame.Network
 
             while (webSocket.State == WebSocketState.Open)
             {
-                await Roda();
+                await EsperaMensagem();
             }
 
             Console.WriteLine("Fechou a conexão");
         }
 
-        public async Task Roda()
+        private async Task EsperaMensagem()
+        {
+            byte[] buffer = new byte[1024];
+
+            await this.webSocket!.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+            string mensagem = Encoding.UTF8.GetString(buffer).TrimEnd((char)0);
+
+            await Responde(mensagem);
+        }
+
+        public async Task Responde(string mensagem)
         {
             switch (this.estado)
             {
-                case EstadoAtual.PerguntaGuid:
-                    string resposta1 = await EnviaPerguntaAsync("Qual seu guid?", CancellationToken.None);
-
-                    if (!Guid.TryParse(resposta1, out this.Guid))
+                case EstadoAtual.Anonimo:
+                    if (mensagem == "quero_guid")
                     {
-                        await EnviaMensagemAsync("Guid inválido!");
+                        await EnviaMensagemAsync(Guid.NewGuid().ToString());
+                        break;
+                    }
+
+                    string[] partes = mensagem.Split(',');
+
+                    if (partes.Length != 3)
+                    {
+                        await EnviaMensagemAsync("Envie Nome, GUID, Jogo");
                         return;
                     }
+
+                    string nome = mensagem.Split(',')[0];
+                    string guid = mensagem.Split(',')[1];
+                    string jogo = mensagem.Split(',')[2];
+
+                    if (!Guid.TryParse(guid, out this.Guid))
+                    {
+                        await EnviaMensagemAsync("GUID invalido");
+                        return;
+                    }
+
                     this.estado++;
+
+                    this.Jogador.Nome = nome;
+
                     break;
 
-                case EstadoAtual.PerguntaPartida:
+                case EstadoAtual.Identificado:
                     string resposta2 = await EnviaPerguntaAsync("Qual sua partida", CancellationToken.None);
 
                     if(!int.TryParse(resposta2, out this.Partida))
@@ -79,9 +113,9 @@ namespace CardGame.Network
 
             await this.webSocket.SendAsync(new ArraySegment<byte>(bufferPergunta), WebSocketMessageType.Text, true, CancellationToken.None);
 
-            await webSocket.ReceiveAsync(new ArraySegment<byte>(bufferResposta), CancellationToken.None);
-            
-            return UTF8Encoding.UTF8.GetString(bufferResposta);
+            await this.webSocket.ReceiveAsync(new ArraySegment<byte>(bufferResposta), CancellationToken.None);
+
+            return Encoding.UTF8.GetString(bufferResposta).TrimEnd((char)0);
         }
 
         public async Task EnviaMensagemAsync(string mensagem)
