@@ -9,14 +9,13 @@ namespace CardGame.Base
         private ConexaoWebSocket conexao;
 
         public string Nome;
-        public List<Carta> Mao;
-        public Bisca? jogoAtual;
 
-        public Jogador(ConexaoWebSocket webSocket)
+        public List<Carta> Mao;
+
+        public Jogador(ConexaoWebSocket webSocket, string nome)
         {
             this.conexao = webSocket;
-
-            this.Nome = "sem_nome";
+            this.Nome = nome;
             this.Mao = new List<Carta>();
         }
 

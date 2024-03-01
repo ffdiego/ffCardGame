@@ -1,4 +1,5 @@
 ﻿using CardGame.Base;
+using CardGame.Jogos;
 using System.Net.WebSockets;
 using System.Text;
 
@@ -15,14 +16,15 @@ namespace CardGame.Network
         private HttpContext context;
         private WebSocket? webSocket;
         private EstadoAtual estado;
+        private GerenciadorPartidas gerenciadorPartidas;
 
-        public Guid Guid;
-        public string Nome;
+        public Guid GuidConexao;
         public Jogador? Jogador;
 
-        public ConexaoWebSocket(HttpContext context)
+        public ConexaoWebSocket(HttpContext context, GerenciadorPartidas gerenciadorPartidas)
         {
             this.context = context;
+            this.gerenciadorPartidas = gerenciadorPartidas;
             this.estado = EstadoAtual.Anonimo;
         }
 
@@ -56,7 +58,8 @@ namespace CardGame.Network
                 case EstadoAtual.Anonimo:
                     if (mensagem == "quero_guid")
                     {
-                        await EnviaMensagemAsync(Guid.NewGuid().ToString());
+                        string novaGuid = Guid.NewGuid().ToString();
+                        await EnviaMensagemAsync(novaGuid);
                         break;
                     }
 
@@ -72,31 +75,33 @@ namespace CardGame.Network
                     string guid = mensagem.Split(',')[1];
                     string jogo = mensagem.Split(',')[2];
 
-                    if (!Guid.TryParse(guid, out this.Guid))
+                    if (!Guid.TryParse(guid, out this.GuidConexao))
                     {
                         await EnviaMensagemAsync("GUID invalido");
                         return;
                     }
 
-                    this.estado++;
-
-                    this.Jogador.Nome = nome;
-
-                    break;
-
-                case EstadoAtual.Identificado:
-                    string resposta2 = await EnviaPerguntaAsync("Qual sua partida", CancellationToken.None);
-
-                    if(!int.TryParse(resposta2, out this.Partida))
+                    if (nome == string.Empty)
                     {
-                        await EnviaMensagemAsync("Partida Inválida!");
-                        return;
+                        await EnviaMensagemAsync("Nome vazio");
                     }
-                    this.estado++;
-                    break;
 
-                case EstadoAtual.Conectado:
-                    string resposta3 = await EnviaPerguntaAsync($"Você está na partida {this.Partida}", CancellationToken.None);
+                    this.Jogador = new Jogador(this, nome);
+
+                    try {
+                        if (jogo == string.Empty)
+                        {
+                            gerenciadorPartidas.CriaPartida().AdicionaJogador(Jogador);
+                        } 
+                        else
+                        {
+                            gerenciadorPartidas.GetPartida(int.Parse(jogo));
+                        }
+                    } catch (Exception ex) { 
+                        await EnviaMensagemAsync(ex.Message);
+                    }
+
+                    estado++;
                     break;
             }
         }
