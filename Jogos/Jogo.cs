@@ -1,4 +1,5 @@
 ﻿using CardGame.Base;
+using CardGame.DAO;
 using System.Text.Json;
 
 namespace CardGame.Jogos
@@ -8,6 +9,8 @@ namespace CardGame.Jogos
         private static int JogosCount = 0;
         public int Id { get; }
 
+        public bool Iniciou;
+
         public List<Jogador> Jogadores;
         public int MaximosJogadores { get; protected set; }
 
@@ -15,6 +18,7 @@ namespace CardGame.Jogos
         {
             this.Jogadores = new List<Jogador>();
             this.Id = JogosCount++;
+            this.Iniciou = false;
         }
 
         public bool AdicionaJogador(Jogador jogador)

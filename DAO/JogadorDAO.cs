@@ -1,8 +1,9 @@
-﻿using CardGame.Jogos;
+﻿using CardGame.Base;
+using CardGame.Jogos;
 using CardGame.Network;
 using Microsoft.AspNetCore.Connections;
 
-namespace CardGame.Base
+namespace CardGame.DAO
 {
     public class JogadorDAO
     {

@@ -4,25 +4,17 @@ using System.Text.Json;
 
 namespace CardGame.Jogos
 {
-    public class Bisca: Jogo
+    public class Buckshot: Jogo
     {
         // Definicoes fixas
-        readonly int CartasNaMaoDeCadaJogador = 7;
+
         readonly TimeSpan tempoPorRodada = TimeSpan.FromSeconds(15);
 
-        public Baralho Baralho;
-        public List<Carta> Monte;
-
-        public bool Iniciou;
         private Jogador? JogadorAtual;
 
-        public Bisca()
+        public Buckshot()
         {
-            Baralho = new Baralho();
-            Monte = new List<Carta>();
-            this.MaximosJogadores = 6;
-
-            Iniciou = false;
+            this.MaximosJogadores = 2;
         }
 
         public override bool IniciaJogo()
@@ -32,12 +24,7 @@ namespace CardGame.Jogos
                 return false;
             }
 
-            foreach (var jogador in Jogadores)
-            {
-                jogador.Mao.AddRange(Baralho.PuxarCartas(CartasNaMaoDeCadaJogador));
-            }
-
-            Jogador jogadorAtual = Jogadores.FirstOrDefault()!;
+            Jogador jogadorAtual = Jogadores.First();
 
             return true;
         }
@@ -59,15 +46,14 @@ namespace CardGame.Jogos
                 throw new Exception($"Jogador {jogador.Nome} requisitou tela e não está na partida!");
             }
 
+            Jogador baixo = jogador;
+            Jogador direita = ObtemProximo(jogador);
+            Jogador cima = ObtemProximo(direita);
+            Jogador esquerda = ObtemProximo(cima);
+
             return new EstadoTelaDAO()
             {
-                Jogador = jogador,
-                OutrosJogadores = 
-                    new List<JogadorDAO>(
-                        Jogadores
-                        .Where(j => j != jogador)
-                        .Select(j => (JogadorDAO)j)
-                    )
+                
             };
         }
 
