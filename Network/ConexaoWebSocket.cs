@@ -1,4 +1,4 @@
-﻿using CardGame.Base;
+﻿using CardGame.Base.Jogadores;
 using CardGame.Jogos;
 using System.Net.WebSockets;
 using System.Text;
@@ -19,7 +19,7 @@ namespace CardGame.Network
         private GerenciadorPartidas gerenciadorPartidas;
 
         public Guid GuidConexao;
-        public Jogador? Jogador;
+        public JogadorWebsocket? Jogador;
 
         public ConexaoWebSocket(HttpContext context, GerenciadorPartidas gerenciadorPartidas)
         {
@@ -86,7 +86,7 @@ namespace CardGame.Network
                         await EnviaMensagemAsync("Nome vazio");
                     }
 
-                    this.Jogador = new Jogador(this, nome);
+                    this.Jogador = new JogadorWebsocket(this, nome);
 
                     try {
                         if (jogo == string.Empty)

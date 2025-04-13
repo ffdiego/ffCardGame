@@ -1,18 +1,15 @@
-﻿using CardGame.Base;
-using CardGame.Jogos;
-using CardGame.Network;
-using Microsoft.AspNetCore.Connections;
+﻿using CardGame.Base.Cartas;
+using CardGame.Base.Jogadores;
 
-namespace CardGame.DAO
+namespace CardGame.DAO;
+
+public class JogadorDAO
 {
-    public class JogadorDAO
-    {
-        public string Nome { get; set; } = string.Empty;
-        public List<Carta>? Mao { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public Mao Mao { get; set; }
 
-        public static implicit operator JogadorDAO(Jogador jogador)
-        {
-            return new JogadorDAO { Nome = jogador.Nome, Mao = jogador.Mao };
-        }
+    public static explicit operator JogadorDAO(Jogador jogador)
+    {
+        return new JogadorDAO { Nome = jogador.Nome, Mao = jogador.Mao };
     }
 }

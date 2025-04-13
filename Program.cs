@@ -13,7 +13,9 @@ app.UseWebSockets();
 app.Map("/", async context =>
 {
     if (!context.WebSockets.IsWebSocketRequest)
+    {
         context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+    }
     else
     {
         using var ws = new ConexaoWebSocket(context, gerenciador);

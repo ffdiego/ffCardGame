@@ -1,4 +1,7 @@
-﻿using CardGame.Base;
+﻿using CardGame.Base.Cartas;
+using CardGame.Base.Jogadores;
+
+namespace CardGame.DAO;
 
 public enum EstadoTela
 {
@@ -6,14 +9,10 @@ public enum EstadoTela
     TocaAnimacao,
 }
 
-namespace CardGame.DAO
+public class EstadoTelaDAO
 {
-    public class EstadoTelaDAO
-    {
-        public EstadoTela EstadoTela = EstadoTela.Nada;
-        public string? Animacao;
-        public Jogador? Jogador;
-        public List<JogadorDAO>? OutrosJogadores;
-        public List<Carta>? Monte;
-    }
+    public JogadorDAO? Jogador;
+    public IEnumerable<JogadorDAO>? OutrosJogadores;
+    public IEnumerable<Carta> CartasMesa;
+    public int QuantidadeMonte;
 }

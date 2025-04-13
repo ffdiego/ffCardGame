@@ -6,11 +6,12 @@
         public GerenciadorPartidas() 
         { 
             listaPartidas = new List<Jogo>();
+            listaPartidas.Add(new Blackjack());
         }
 
         public Jogo CriaPartida()
         {
-            Jogo jogo = new Bisca();
+            Jogo jogo = new Blackjack();
             listaPartidas.Add(jogo);
             return jogo;
         }

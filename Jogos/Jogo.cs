@@ -1,4 +1,4 @@
-﻿using CardGame.Base;
+﻿using CardGame.Base.Jogadores;
 using CardGame.DAO;
 using System.Text.Json;
 
@@ -11,19 +11,19 @@ namespace CardGame.Jogos
 
         public bool Iniciou;
 
-        public List<Jogador> Jogadores;
+        public List<JogadorWebsocket> Jogadores;
         public int MaximosJogadores { get; protected set; }
 
         public Jogo()
         {
-            this.Jogadores = new List<Jogador>();
+            this.Jogadores = new();
             this.Id = JogosCount++;
             this.Iniciou = false;
         }
 
-        public bool AdicionaJogador(Jogador jogador)
+        public bool AdicionaJogador(JogadorWebsocket jogador)
         {
-            if (Jogadores.Count > (MaximosJogadores + 1))
+            if (Jogadores.Count >= MaximosJogadores)
             {
                 return false;
             }
@@ -33,6 +33,8 @@ namespace CardGame.Jogos
         }
 
         public abstract bool IniciaJogo();
+
+        public abstract bool Avanca();
 
         public abstract EstadoTelaDAO ObtemInformacoes(Jogador jogador);
     }
