@@ -20,6 +20,7 @@ namespace CardGame.Network
 
         public Guid GuidConexao;
         public JogadorWebsocket? Jogador;
+        public event Action<string>? MensagemRecebida;
 
         public ConexaoWebSocket(HttpContext context, GerenciadorPartidas gerenciadorPartidas)
         {
@@ -84,24 +85,32 @@ namespace CardGame.Network
                     if (nome == string.Empty)
                     {
                         await EnviaMensagemAsync("Nome vazio");
+                        return;
                     }
 
                     this.Jogador = new JogadorWebsocket(this, nome);
 
                     try {
-                        if (jogo == string.Empty)
+                        var partida = gerenciadorPartidas.GetPartida(int.Parse(jogo));
+
+                        if (partida == null)
                         {
-                            gerenciadorPartidas.CriaPartida().AdicionaJogador(Jogador);
-                        } 
+                            await EnviaMensagemAsync($"Partida {jogo} não encontrada!");
+                        }
                         else
                         {
-                            gerenciadorPartidas.GetPartida(int.Parse(jogo));
+                            partida.AdicionaJogador(this.Jogador);
+                            await EnviaMensagemAsync($"Jogador {nome} entrou no jogo {jogo}");
                         }
                     } catch (Exception ex) { 
                         await EnviaMensagemAsync(ex.Message);
+                        return;
                     }
 
                     estado++;
+                    break;
+                case EstadoAtual.Identificado:
+                    MensagemRecebida?.Invoke(mensagem);
                     break;
             }
         }

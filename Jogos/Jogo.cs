@@ -12,6 +12,9 @@ namespace CardGame.Jogos
         public bool Iniciou;
 
         public List<JogadorWebsocket> Jogadores;
+
+        public event Action<EstadoTelaDAO> OnAtualizacao;
+
         public int MaximosJogadores { get; protected set; }
 
         public Jogo()
@@ -25,17 +28,22 @@ namespace CardGame.Jogos
         {
             if (Jogadores.Count >= MaximosJogadores)
             {
-                return false;
+                throw new Exception($"Número máximo de jogadores já atingido: {Jogadores.Count}/{MaximosJogadores}");
             }
 
             Jogadores.Add(jogador);
             return true;
         }
 
+        protected void EnviaAtualizacoes()
+        {
+            this.OnAtualizacao?.Invoke(this.ObtemInformacoes());
+        }
+
         public abstract bool IniciaJogo();
 
         public abstract bool Avanca();
 
-        public abstract EstadoTelaDAO ObtemInformacoes(Jogador jogador);
+        public abstract EstadoTelaDAO ObtemInformacoes(Jogador? jogador = null);
     }
 }

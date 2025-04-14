@@ -11,8 +11,10 @@ public enum EstadoTela
 
 public class EstadoTelaDAO
 {
-    public JogadorDAO? Jogador;
-    public IEnumerable<JogadorDAO>? OutrosJogadores;
-    public IEnumerable<Carta> CartasMesa;
-    public int QuantidadeMonte;
+    public string Estado { get; set; }
+    public int NumeroJogadores { get; set; }
+    public JogadorDAO? Jogador { get; set; }
+    public IEnumerable<JogadorDAO>? OutrosJogadores { get; set; }
+    public IEnumerable<Carta> CartasMesa { get; set; }
+    public int QuantidadeMonte { get; set; }
 }

@@ -15,12 +15,40 @@ app.Map("/", async context =>
     if (!context.WebSockets.IsWebSocketRequest)
     {
         context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        return;
     }
-    else
+
+    using var ws = new ConexaoWebSocket(context, gerenciador);
+    await ws.EscutaAsync();
+});
+
+app.Map("/{numero:int}", (int? numero, string? acao) =>
+{
+    if (numero == null) 
     {
-        using var ws = new ConexaoWebSocket(context, gerenciador);
-        await ws.EscutaAsync();
+        return Results.BadRequest();
     }
+
+    var partida = gerenciador.GetPartida(numero.Value);
+
+    if (partida == null)
+    {
+        return Results.NotFound();
+    }
+
+    if (!string.IsNullOrEmpty(acao))
+    {
+        switch (acao?.ToLower())
+        {
+            case "avanca":
+                partida.Avanca();
+                break;
+            default:
+                break;
+        }
+    }
+
+    return Results.Json(partida.ObtemInformacoes());
 });
 
 await app.RunAsync();

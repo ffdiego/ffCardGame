@@ -1,9 +1,10 @@
 ﻿using CardGame.Base.Cartas;
 using CardGame.Network;
+using System.Threading;
 
 namespace CardGame.Base.Jogadores
 {
-    public class JogadorWebsocket : Jogador
+    public class JogadorWebsocket : Jogador, IDisposable
     {
         private ConexaoWebSocket conexao;
 
@@ -12,9 +13,40 @@ namespace CardGame.Base.Jogadores
             conexao = webSocket;
         }
 
-        public async Task<string> EnviaPerguntaAsync(string pergunta, CancellationToken cToken)
+        public async Task EnviaPergunta(string pergunta, TimeSpan timeout, Func<string, Task<bool>> handler)
         {
-            return await conexao.EnviaPerguntaAsync(pergunta, cToken);
+            await this.conexao.EnviaMensagemAsync(pergunta);
+
+            var tcs = new TaskCompletionSource<bool>();
+             
+            async void HandlerInterno(string msg)
+            {
+                try
+                {
+                    while (!await handler(msg));
+                }
+                finally
+                {
+                    tcs.TrySetResult(true);
+                }
+            }
+
+            this.conexao.MensagemRecebida += HandlerInterno;
+
+            var delay = Task.Delay(timeout);
+            var completed = await Task.WhenAny(tcs.Task, delay);
+
+            this.conexao.MensagemRecebida -= HandlerInterno;
+
+            if (completed == delay)
+            {
+                await this.conexao.EnviaMensagemAsync("Você não respondeu a tempo, pulando sua vez");
+            }
+        }
+
+        public void Dispose()
+        {
+            conexao.Dispose();
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace CardGame.Jogos
+﻿using CardGame.DAO;
+using System.Text.Json;
+
+namespace CardGame.Jogos
 {
     public class GerenciadorPartidas
     {
@@ -6,7 +9,16 @@
         public GerenciadorPartidas() 
         { 
             listaPartidas = new List<Jogo>();
-            listaPartidas.Add(new Blackjack());
+            var blackjack = new Blackjack();
+            listaPartidas.Add(blackjack);
+
+            blackjack.OnAtualizacao += Blackjack_OnAtualizaEspectadores;
+        }
+
+        private void Blackjack_OnAtualizaEspectadores(EstadoTelaDAO obj)
+        {
+            var prettyJson = JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true });
+            Console.Write(prettyJson);
         }
 
         public Jogo CriaPartida()

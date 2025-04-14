@@ -17,6 +17,7 @@ public class Blackjack : Jogo
 
     private enum EstadoMao
     {
+        BlackJack,
         AbaixoDe17,
         DezesseteOuMais,
         VinteUm,
@@ -32,8 +33,6 @@ public class Blackjack : Jogo
 
     private void DistribuiCartas()
     {
-        this.estadoJogo = EstadoJogo.DistribuiCartas;
-
         foreach (var jogador in Jogadores.Concat(new[] { casa }))
         {
             jogador.Mao.Limpa();
@@ -43,40 +42,37 @@ public class Blackjack : Jogo
 
     private async void JogadoresCompram()
     {
-        this.estadoJogo = EstadoJogo.JogadoresCompram;
-
         this.resultadosRodada = new();
 
         foreach (var jogador in Jogadores)
         {
             var somaCartas = SomaCartas(jogador.Mao);
 
-            var resposta = string.Empty;
-
-            while (resposta != "stand")
+            await jogador.EnviaPergunta("Vai ou racha?", TimeSpan.FromSeconds(10), async (resposta) =>
             {
-                resposta = await jogador.EnviaPerguntaAsync("Vai ou racha?", new CancellationToken());
-
-                if (resposta == "hit")
+                switch (resposta.ToLower())
                 {
-                    jogador.Mao.AdicionaCartas(this.baralho.PuxarCartas(1));
-                    somaCartas = SomaCartas(jogador.Mao);
-
-                    if (somaCartas.estado == EstadoMao.Estorou)
-                    {
+                    case "stand":
+                        return true;
+                    case "hit":
+                        jogador.Mao.AdicionaCartas(this.baralho.PuxarCartas(1));
+                        somaCartas = SomaCartas(jogador.Mao);
+                        if (somaCartas.estado == EstadoMao.Estorou)
+                        {
+                            return true;
+                        }
                         break;
-                    }
+                    default:
+                        break;
                 }
-            }
-
+                return false;
+            });
             resultadosRodada.Add(jogador, somaCartas);
         }
     }
 
     private void CasaCompra()
     {
-        this.estadoJogo = EstadoJogo.CasaCompra;
-
         var somaCartas = SomaCartas(casa.Mao);
 
         while (somaCartas.soma < 17)
@@ -86,14 +82,12 @@ public class Blackjack : Jogo
             somaCartas = SomaCartas(casa.Mao);
         }
 
-        resultadosRodada.Add(casa, somaCartas);
+        resultadosRodada!.Add(casa, somaCartas);
     }
 
     private void VerificaResultados()
     {
-        this.estadoJogo = EstadoJogo.VerificaResultados;
-
-        var resultadoCasa = this.resultadosRodada[casa];
+        var resultadoCasa = this.resultadosRodada![casa];
 
         foreach (var jogador in Jogadores)
         {
@@ -122,19 +116,24 @@ public class Blackjack : Jogo
         }
     }
 
-
-
     private static (int soma, EstadoMao estado) SomaCartas(Mao mao)
     {
-        int somaSemAs = mao.Where(c => c.Numero != 1).Sum(c => c.Numero);
-        int quantidadeAs = mao.Where(c => c.Numero == 1).Count();
+        int somaNumeros = mao.Comuns.Sum(c => c.Numero);
+        int somaFiguras = mao.Figuras.Count() * 10;
+        int quantidadeAs = mao.As.Count();
 
         int somaTotal(int asDesconsiderados)
         {
-            return somaSemAs + (quantidadeAs * 11) - (asDesconsiderados * 10);
+            return somaNumeros + (quantidadeAs * 11) - (asDesconsiderados * 10);
         }
 
         int soma = somaTotal(0);
+
+        if (soma == 21 && mao.Count == 2)
+        {
+            return (soma, EstadoMao.BlackJack);
+        }
+
         int asDesconsiderados = 0;
         while (soma > 21 && asDesconsiderados < quantidadeAs)
         {
@@ -163,6 +162,7 @@ public class Blackjack : Jogo
     public Blackjack() : base()
     {
         baralho = new Baralho(quantidadeBaralhos: 5);
+        MaximosJogadores = 4;
         estadoJogo = EstadoJogo.EsperandoJogadoresConectarem;
         casa = new Jogador("Casa");
         valorRodada = 50;
@@ -190,22 +190,26 @@ public class Blackjack : Jogo
             this.estadoJogo = EstadoJogo.DistribuiCartas;
         }
 
-        this.acoesEstado[this.estadoJogo]();
+        this.acoesEstado[++this.estadoJogo]();
+
+        EnviaAtualizacoes();
 
         return true;
     }
 
-    public override EstadoTelaDAO ObtemInformacoes(Jogador jogador)
+    public override EstadoTelaDAO ObtemInformacoes(Jogador? jogador = null)
     {
-        var cartasMesa = new List<Carta> { casa.Mao.First() };
-        cartasMesa.AddRange(
-            estadoJogo < EstadoJogo.CasaCompra
-                ? new[] { new Carta() }
-                : casa.Mao.Skip(1)
-        );
+        var cartasMesa = casa.Mao.ToList();
+
+        if (cartasMesa.ElementAtOrDefault(1) != null && estadoJogo <= EstadoJogo.CasaCompra)
+        {
+            cartasMesa[1] = new Carta();
+        }
 
         return new EstadoTelaDAO()
         {
+            Estado = this.estadoJogo.ToString(),
+            NumeroJogadores = Jogadores.Count(),
             Jogador = null,
             OutrosJogadores = Jogadores.Select(j => (JogadorDAO)j),
             CartasMesa = cartasMesa,
