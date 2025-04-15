@@ -1,4 +1,5 @@
-﻿using CardGame.Jogos;
+﻿using CardGame.Base.Jogadores;
+using CardGame.Jogos;
 using CardGame.Network;
 using System.Net;
 
@@ -10,19 +11,76 @@ GerenciadorPartidas gerenciador = new GerenciadorPartidas();
 var app = builder.Build();
 app.UseWebSockets();
 
-app.Map("/", async context =>
+app.Map("/health", () =>
 {
-    if (!context.WebSockets.IsWebSocketRequest)
+    return Results.Ok();
+});
+
+app.Map("/jogar/{numero:int}", async context =>
+{
+    if (!context.WebSockets.IsWebSocketRequest || int.TryParse(context.Request.RouteValues["numero"]?.ToString(), out int numero))
     {
         context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
         return;
     }
 
-    using var ws = new ConexaoWebSocket(context, gerenciador);
-    await ws.EscutaAsync();
+    var nome = context.Request.Query["nome"];
+    if (string.IsNullOrEmpty(nome))
+    {
+        context.Response.StatusCode = 400;
+        await context.Response.WriteAsync("Nome inválido ou ausente");
+        return;
+    }
+
+    Console.WriteLine($"{nome} tentando conectar ao jogo {numero}");
+
+    var partida = gerenciador.GetPartida(numero);
+    if (partida is null)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+        return;
+    }
+
+    var jogador = new JogadorWebsocket(new ConexaoWebSocket(context), nome);
+
+    try
+    {
+        partida.AdicionaJogador(jogador);
+    }
+    catch (Exception e)
+    {
+        await context.Response.WriteAsync(e.Message);
+        context.Response.StatusCode = (int)HttpStatusCode.PreconditionFailed;
+        jogador.Dispose();
+        return;
+    }
+
+    await jogador.EscutaAsync();
 });
 
-app.Map("/{numero:int}", (int? numero, string? acao) =>
+app.Map("/assistir/{numero:int}", async context =>
+{
+    if (!context.WebSockets.IsWebSocketRequest || int.TryParse(context.Request.RouteValues["numero"]?.ToString(), out int numero))
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        return;
+    }
+
+    Console.WriteLine($"Novo espectador conectando ao jogo {numero}");
+
+    var partida = gerenciador.GetPartida(numero);
+    if (partida is null)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+        return;
+    }
+
+    var espectador = new Espectador(new ConexaoWebSocket(context), partida);
+
+    await espectador.EscutaAsync();
+});
+
+app.Map("/admin/{numero:int}", (int? numero, string? acao) =>
 {
     if (numero == null) 
     {

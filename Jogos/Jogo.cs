@@ -13,7 +13,7 @@ namespace CardGame.Jogos
 
         public List<JogadorWebsocket> Jogadores;
 
-        public event Action<EstadoTelaDAO> OnAtualizacao;
+        public event Action<EstadoTelaDAO>? OnAtualizacao;
 
         public int MaximosJogadores { get; protected set; }
 

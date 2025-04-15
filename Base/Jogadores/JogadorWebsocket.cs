@@ -13,6 +13,8 @@ namespace CardGame.Base.Jogadores
             conexao = webSocket;
         }
 
+        public async Task EscutaAsync() => await this.conexao.EscutaAsync();
+
         public async Task EnviaPergunta(string pergunta, TimeSpan timeout, Func<string, Task<bool>> handler)
         {
             await this.conexao.EnviaMensagemAsync(pergunta);
