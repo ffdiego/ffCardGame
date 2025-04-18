@@ -1,11 +1,13 @@
 ﻿using CardGame.Base.Cartas;
 using CardGame.Network;
+using System.Net.WebSockets;
 using System.Threading;
 
 namespace CardGame.Base.Jogadores
 {
     public class JogadorWebsocket : Jogador, IDisposable
     {
+        public bool Conectado => conexao.ConexaoAtiva;
         private ConexaoWebSocket conexao;
 
         public JogadorWebsocket(ConexaoWebSocket webSocket, string nome) : base(nome)

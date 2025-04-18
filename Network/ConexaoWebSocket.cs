@@ -5,6 +5,7 @@ namespace CardGame.Network
 {
     public class ConexaoWebSocket: IDisposable
     {
+        public bool ConexaoAtiva => webSocket?.State == WebSocketState.Open;
         private HttpContext context;
         private WebSocket? webSocket;
 
@@ -30,6 +31,7 @@ namespace CardGame.Network
             }
 
             Console.WriteLine("Fechou a conexão");
+
         }
 
         public async Task EnviaMensagemAsync(string mensagem)

@@ -6,16 +6,16 @@ namespace CardGame.Jogos
 {
     public abstract class Jogo
     {
-        private static int JogosCount = 0;
         public int Id { get; }
-
+        public int MaximosJogadores { get; protected set; }
+        public string Tipo { get => this.GetType().Name; }
+        public int NumeroJogadores { get => this.Jogadores.Count; }
+        
+        private static int JogosCount = 0;
         public bool Iniciou;
-
         public List<JogadorWebsocket> Jogadores;
-
         public event Action<EstadoTelaDAO>? OnAtualizacao;
 
-        public int MaximosJogadores { get; protected set; }
 
         public Jogo()
         {

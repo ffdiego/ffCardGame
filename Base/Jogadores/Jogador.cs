@@ -4,11 +4,19 @@ namespace CardGame.Base.Jogadores;
 
 public class Jogador
 {
-    public string Nome;
+    public string Nome { get; set; }
 
-    public Mao Mao;
+    public Mao Mao { get; set; }
 
-    public int Dinheiro;
+    public decimal Dinheiro
+    {
+        get => this.dinheiro;
+        set
+        {
+            this.dinheiro = Math.Round(value, 2);
+        }
+    }
+    private decimal dinheiro;
 
     public Jogador(string nome)
     {
