@@ -6,17 +6,17 @@ public class Baralho
     public List<Carta> CartasRemovidas;
     public Baralho(int quantidadeBaralhos = 1, bool comCoringa = false)
     {
-        int quantidadeNaipes = Enum.GetValues<Naipe>().Length;
-        int quantidadeNumeros = 13;
-        int quantidadeCoringas = comCoringa ? 2 : 0;
+        int naipers = Enum.GetValues<Naipe>().Length;
+        int numeros = 13;
+        int coringas = comCoringa ? 2 : 0;
 
-        int quantidadeCartas = quantidadeNaipes * quantidadeNumeros + quantidadeCoringas;
+        int quantidadeCartas = naipers * numeros + coringas;
         Cartas = new List<Carta>(quantidadeCartas);
         CartasRemovidas = new List<Carta>(quantidadeCartas);
 
         foreach (var naipe in Enum.GetValues<Naipe>().Where(n => n != Naipe.Escondida))
         {
-            for (int i = 1; i <= quantidadeNumeros; i++)
+            for (int i = 1; i <= numeros; i++)
             {
                 for (int b = 0; b < quantidadeBaralhos; b++)
                 {

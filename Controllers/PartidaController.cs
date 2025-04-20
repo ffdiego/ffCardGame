@@ -3,7 +3,6 @@ using CardGame.DAO;
 using CardGame.Jogos;
 using CardGame.Network;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 
 namespace CardGame.Controllers;
 
@@ -18,9 +17,9 @@ public class PartidaController : ControllerBase
     }
 
     [HttpGet("/health")]
-    public IResult Health()
+    public ActionResult Health()
     {
-        return Results.Ok();
+        return Ok(true);
     }
 
     [HttpGet("/lista")]
@@ -29,7 +28,7 @@ public class PartidaController : ControllerBase
         return this.gerenciador.listaPartidas;
     }
 
-    [HttpGet("/jogar/{idPartida}")]
+    [HttpGet("/jogar/{idPartida:int}")]
     public async Task<ActionResult> Jogar(int idPartida, [FromQuery] string nome)
     {
         if (!HttpContext.WebSockets.IsWebSocketRequest)
@@ -67,10 +66,10 @@ public class PartidaController : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("/assistir/{idPartida}")]
+    [HttpGet("/assistir/{idPartida:int}")]
     public async Task<ActionResult> Assistir(int idPartida)
     {
-        if(!HttpContext.WebSockets.IsWebSocketRequest)
+        if (!HttpContext.WebSockets.IsWebSocketRequest)
         {
             return BadRequest();
         }

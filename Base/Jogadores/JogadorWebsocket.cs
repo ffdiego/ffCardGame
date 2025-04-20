@@ -17,7 +17,7 @@ namespace CardGame.Base.Jogadores
 
         public async Task EscutaAsync() => await this.conexao.EscutaAsync();
 
-        public async Task EnviaPergunta(string pergunta, TimeSpan timeout, Func<string, Task<bool>> handler)
+        public async Task EnviaPergunta(string pergunta, TimeSpan timeout, Func<string, bool> handler)
         {
             await this.conexao.EnviaMensagemAsync(pergunta);
 
@@ -27,7 +27,7 @@ namespace CardGame.Base.Jogadores
             {
                 try
                 {
-                    while (!await handler(msg));
+                    while (!handler(msg));
                 }
                 finally
                 {

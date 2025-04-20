@@ -48,7 +48,7 @@ public class Blackjack : Jogo
         {
             var somaCartas = SomaCartas(jogador.Mao);
 
-            await jogador.EnviaPergunta("Vai ou racha?", TimeSpan.FromSeconds(10), async (resposta) =>
+            await jogador.EnviaPergunta("Vai ou racha?", TimeSpan.FromSeconds(10), (resposta) =>
             {
                 switch (resposta.ToLower())
                 {

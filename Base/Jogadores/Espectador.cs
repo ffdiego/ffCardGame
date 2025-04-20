@@ -1,8 +1,7 @@
 ﻿using CardGame.DAO;
 using CardGame.Jogos;
 using CardGame.Network;
-using System.Net.WebSockets;
-using System.Text;
+using System.Text.Json;
 
 namespace CardGame.Base.Jogadores
 {
@@ -15,7 +14,8 @@ namespace CardGame.Base.Jogadores
         {
             this.conexao = conexao;
             this.jogo = jogo;
-            jogo.OnAtualizacao += RecebeAtualizacao;
+            NotificaClient(jogo.ObtemInformacoes());
+            jogo.OnAtualizacao += NotificaClient;
         }
 
         public async Task EscutaAsync() => await this.conexao.EscutaAsync();
@@ -23,12 +23,19 @@ namespace CardGame.Base.Jogadores
         public void Dispose()
         {
             this.conexao.Dispose();
-            this.jogo.OnAtualizacao -= RecebeAtualizacao;
+            this.jogo.OnAtualizacao -= NotificaClient;
         }
 
-        public void RecebeAtualizacao(EstadoTelaDAO estadoTelaDAO)
+        public void NotificaClient(EstadoTelaDAO estadoTelaDAO)
         {
+            var mensagem = new
+            {
+                tipo = "EstadoTela",
+                conteudo = estadoTelaDAO
+            };
 
+            var mensagemJSON = JsonSerializer.Serialize(mensagem);
+            this.conexao.EnviaMensagemAsync(mensagemJSON).RunSynchronously();
         }
     }
 }
